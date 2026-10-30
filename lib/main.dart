@@ -124,7 +124,7 @@ class _ContactListPageState extends State<ContactListPage> {
     );
   }
 
-  // NC1: Mở màn hình tìm kiếm và chờ liên hệ được chọn
+  // NC1: Mở màn hình tìm kiếm và nhận liên hệ được chọn
   Future<void> _timKiem() async {
     final chon = await Navigator.push<Contact>(
       context,
@@ -183,8 +183,19 @@ class _ContactListPageState extends State<ContactListPage> {
         children: [
           for (int i = 0; i < _danhBa.length; i++)
             ListTile(
-              leading: CircleAvatar(
-                child: Text(_danhBa[i].hoTen[0]),
+              leading: Hero(
+                tag: _danhBa[i].dienThoai,
+                child: CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Colors.blue.shade100,
+                  child: Text(
+                    _danhBa[i].hoTen[0],
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
               title: Text(_danhBa[i].hoTen),
               subtitle: Text(_danhBa[i].dienThoai),
@@ -288,7 +299,7 @@ class _SearchPageState extends State<SearchPage> {
                     subtitle: Text(contact.dienThoai),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // Trả liên hệ được chọn về màn hình trước
+                      // Trả liên hệ được chọn về màn hình gọi tìm kiếm
                       Navigator.pop(context, contact);
                     },
                   );
@@ -325,6 +336,23 @@ class ContactDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Center(
+              child: Hero(
+                tag: contact.dienThoai,
+                child: CircleAvatar(
+                  radius: 55,
+                  backgroundColor: Colors.blue.shade100,
+                  child: Text(
+                    contact.hoTen[0],
+                    style: const TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
             _dong(Icons.person, 'Họ tên', contact.hoTen),
             _dong(Icons.phone, 'Điện thoại', contact.dienThoai),
             _dong(
