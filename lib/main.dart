@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 void main() => runApp(const MyApp());
@@ -125,6 +124,26 @@ class _ContactListPageState extends State<ContactListPage> {
     );
   }
 
+  // NC1: Mở màn hình tìm kiếm và chờ liên hệ được chọn
+  Future<void> _timKiem() async {
+    final chon = await Navigator.push<Contact>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SearchPage(danhBa: _danhBa),
+      ),
+    );
+
+    if (chon == null || !mounted) return;
+
+    final viTri = _danhBa.indexWhere(
+          (contact) => contact.dienThoai == chon.dienThoai,
+    );
+
+    if (viTri != -1) {
+      await _moChiTiet(viTri);
+    }
+  }
+
   // Thêm liên hệ mới
   Future<void> _themMoi() async {
     final moi = await Navigator.push<Contact>(
@@ -145,6 +164,12 @@ class _ContactListPageState extends State<ContactListPage> {
       appBar: AppBar(
         title: const Text('Danh bạ mini'),
         actions: [
+          // NC1: Nút mở màn hình tìm kiếm
+          IconButton(
+            tooltip: 'Tìm kiếm',
+            icon: const Icon(Icons.search),
+            onPressed: _timKiem,
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () =>
@@ -171,6 +196,107 @@ class _ContactListPageState extends State<ContactListPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _themMoi,
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+// ================================================================
+// NC1 – MÀN HÌNH TÌM KIẾM
+// ================================================================
+
+class SearchPage extends StatefulWidget {
+  final List<Contact> danhBa;
+
+  const SearchPage({
+    super.key,
+    required this.danhBa,
+  });
+
+  @override
+  State<SearchPage> createState() => _SearchPageState();
+}
+
+class _SearchPageState extends State<SearchPage> {
+  final TextEditingController _tuKhoa = TextEditingController();
+
+  List<Contact> get _ketQua {
+    final tuKhoa = _tuKhoa.text.trim().toLowerCase();
+
+    if (tuKhoa.isEmpty) {
+      return widget.danhBa;
+    }
+
+    return widget.danhBa.where((contact) {
+      return contact.hoTen.toLowerCase().contains(tuKhoa) ||
+          contact.dienThoai.toLowerCase().contains(tuKhoa) ||
+          contact.email.toLowerCase().contains(tuKhoa);
+    }).toList();
+  }
+
+  @override
+  void dispose() {
+    _tuKhoa.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ketQua = _ketQua;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Tìm kiếm liên hệ'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: _tuKhoa,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'Nhập tên, số điện thoại hoặc email',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: IconButton(
+                  tooltip: 'Xóa nội dung',
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _tuKhoa.clear();
+                    setState(() {});
+                  },
+                ),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ketQua.isEmpty
+                  ? const Center(
+                child: Text('Không tìm thấy liên hệ phù hợp'),
+              )
+                  : ListView.builder(
+                itemCount: ketQua.length,
+                itemBuilder: (context, index) {
+                  final contact = ketQua[index];
+
+                  return ListTile(
+                    leading: CircleAvatar(
+                      child: Text(contact.hoTen[0]),
+                    ),
+                    title: Text(contact.hoTen),
+                    subtitle: Text(contact.dienThoai),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      // Trả liên hệ được chọn về màn hình trước
+                      Navigator.pop(context, contact);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
